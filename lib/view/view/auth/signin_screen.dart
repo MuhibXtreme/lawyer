@@ -1,16 +1,17 @@
-import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lawyer/components/navigation.dart';
-import 'package:lawyer/view/auth/signup_screen.dart';
+import 'package:lawyer/view/view/Admin/home_screen.dart';
+import 'package:lawyer/view/view/Client/home.dart';
+import 'package:lawyer/view/view/auth/signup_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../components/button_widget.dart';
+import '../../../components/button_widget.dart';
 
-import '../../components/text_widget.dart';
-import '../../components/textfield_widget.dart';
-import '../../utils/utils.dart';
+import '../../../components/text_widget.dart';
+import '../../../components/textfield_widget.dart';
+import '../../../utils/utils.dart';
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({Key? key}) : super(key: key);
@@ -24,30 +25,54 @@ class _SigninScreenState extends State<SigninScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   String? getemail;
+  String? rolename;
 
   TextEditingController usernameController = TextEditingController();
   TextEditingController passController = TextEditingController();
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
-  Future<String> login() async {
-    // getemail = await _firestore
-    //     .collection('Users')
-    //     .doc(usernameController.text)
-    //     .get()
-    //     .then((value) {
-    //   return value['email'];
-    // });
+  bool loading = false;
 
-    String res = "some error occured";
-    try {
-      await _auth
-          .signInWithEmailAndPassword(
-              email: 'email', password: passController.text)
-          .then((value) async {});
-      res = "success";
-    } catch (err) {
-      res = err.toString();
+  void storename() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('username', usernameController.text);
+  }
+
+  void storeemail() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('clientemail', getemail!);
+  }
+
+  Future<String> login() async {
+    setState(() {
+      loading = true;
+    });
+    String res = "User not Exist on this username";
+
+    final snapShot =
+        await _firestore.collection('Users').doc(usernameController.text).get();
+    if (snapShot.exists) {
+      await _firestore
+          .collection('Users')
+          .doc(usernameController.text)
+          .get()
+          .then((value) {
+        getemail = value['email'];
+        rolename = value['role'];
+      });
+      try {
+        await _auth.signInWithEmailAndPassword(
+            email: getemail.toString(), password: passController.text);
+
+        res = rolename.toString();
+      } catch (err) {
+        res = err.toString();
+      }
     }
+    setState(() {
+      loading = false;
+    });
+
     return res;
   }
 
@@ -75,7 +100,7 @@ class _SigninScreenState extends State<SigninScreen> {
                   elevation: 0,
                   color: Colors.grey.withOpacity(0.85),
                   child: Container(
-                    height: screenHeight(context) * 0.53,
+                    height: screenHeight(context) * 0.55,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 25, vertical: 10),
                     child: Form(
@@ -101,6 +126,7 @@ class _SigninScreenState extends State<SigninScreen> {
                             fontWeight: FontWeight.w500,
                           ),
                           TextFieldWidget(
+                            read: false,
                             // height: 50,
                             // textcolor: MyColors.white,
                             hinttext: 'Enter Username',
@@ -133,6 +159,7 @@ class _SigninScreenState extends State<SigninScreen> {
                           TextFieldWidget(
                             // height: 50,
                             // textcolor: MyColors.white,
+                            read: false,
                             hinttext: 'Enter Password',
 
                             keyboardtype: TextInputType.text,
@@ -154,27 +181,47 @@ class _SigninScreenState extends State<SigninScreen> {
                               }
                             },
                           ),
-                          ButtonWidget(
-                            borderradius: BorderRadius.circular(10),
-                            onTab: () async {
-                              final isValid = formKey.currentState!.validate();
-                              if (!isValid) {
-                                return;
-                              }
-                              formKey.currentState!.save();
-
-                              String res = await login();
-                              if (res != 'success') {
-                                showSnackBar(res, context);
-                              }
-                            },
-                            text: 'Login',
-                            bgcolor: Colors.black,
-                            textcolor: Colors.white,
-                            height: 35,
-                            width: 120,
-                            size: 20,
+                          const SizedBox(
+                            height: 10,
                           ),
+                          loading
+                              ? const CircularProgressIndicator(
+                                  color: Colors.black,
+                                )
+                              : ButtonWidget(
+                                  borderradius: BorderRadius.circular(10),
+                                  onTab: () async {
+                                    final isValid =
+                                        formKey.currentState!.validate();
+                                    if (!isValid) {
+                                      return;
+                                    }
+                                    formKey.currentState!.save();
+
+                                    String res = await login();
+                                    if (context.mounted &&
+                                        res != 'Admin' &&
+                                        res != 'Client') {
+                                      showSnackBar(res, context);
+                                    } else {
+                                      if (context.mounted && res == 'Admin') {
+                                        storename();
+                                        MyNavigation.push(
+                                            context, const AdminHome());
+                                      } else {
+                                        storeemail();
+                                        MyNavigation.push(
+                                            context, const ClientHome());
+                                      }
+                                    }
+                                  },
+                                  text: 'Login',
+                                  bgcolor: Colors.black,
+                                  textcolor: Colors.white,
+                                  height: 35,
+                                  width: 120,
+                                  size: 20,
+                                ),
                           const SizedBox(
                             height: 10,
                           ),
@@ -185,8 +232,8 @@ class _SigninScreenState extends State<SigninScreen> {
                           ),
                           TextButton(
                               onPressed: () {
-                                MyNavigation()
-                                    .push(context, const SignupScreen());
+                                MyNavigation.push(
+                                    context, const SignupScreen());
                               },
                               child: const TextWidget(
                                 textcolor: Colors.black,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 class ButtonWidget extends StatelessWidget {
   final String? text;
   final double? size;
@@ -10,14 +11,26 @@ class ButtonWidget extends StatelessWidget {
   final BoxBorder? border;
   final BorderRadius? borderradius;
   final Function? onTab;
-  const ButtonWidget({Key? key,this.size,this.text,this.fontWeight,this.textcolor,this.bgcolor,this.border,this.borderradius,this.height,this.width,this.onTab}) : super(key: key);
+  const ButtonWidget(
+      {Key? key,
+      this.size,
+      this.text,
+      this.fontWeight,
+      this.textcolor,
+      this.bgcolor,
+      this.border,
+      this.borderradius,
+      this.height,
+      this.width,
+      this.onTab})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => onTab!(),
       child: Container(
-        margin: EdgeInsets.only(left: 20, top: 25, right: 20),
+        margin: const EdgeInsets.only(left: 20, top: 20, right: 20),
         alignment: Alignment.center,
         height: height,
         width: width,
@@ -25,9 +38,12 @@ class ButtonWidget extends StatelessWidget {
           color: bgcolor,
           border: border,
           borderRadius: borderradius,
-          
         ),
-        child: Text('$text',style: TextStyle(color: textcolor,fontSize: size,fontWeight: fontWeight),),
+        child: Text(
+          '$text',
+          style: TextStyle(
+              color: textcolor, fontSize: size, fontWeight: fontWeight),
+        ),
       ),
     );
   }

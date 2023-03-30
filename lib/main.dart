@@ -1,7 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:lawyer/view/auth/signin_screen.dart';
-import 'package:lawyer/view/auth/signup_screen.dart';
+import 'package:lawyer/view/view/auth/signin_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,14 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:lawyer/view/auth/signin_screen.dart';
+import 'package:lawyer/view/view/auth/signin_screen.dart';
 
-import '../../components/button_widget.dart';
-import '../../components/navigation.dart';
+import '../../../components/button_widget.dart';
+import '../../../components/navigation.dart';
 
-import '../../components/text_widget.dart';
-import '../../components/textfield_widget.dart';
+import '../../../components/text_widget.dart';
+import '../../../components/textfield_widget.dart';
 import 'package:lawyer/utils/utils.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -32,7 +31,9 @@ class _SignupScreenState extends State<SignupScreen> {
   TextEditingController email = TextEditingController();
 
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
   bool isSwitched = false;
+  bool loading = false;
 
   void toggleSwitch(bool value) {
     if (isSwitched == false) {
@@ -48,13 +49,16 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
-  void signup() async {
-    //checking if username already exist or not
+  Future<String> signup() async {
+    setState(() {
+      loading = true;
+    });
+    String response = 'some error occured';
     final snapShot =
         await _firestore.collection('Users').doc(username.text).get();
 
     if (!snapShot.exists) {
-      //Exist then add these data in firestore
+      //Not Exist then add these data in firestore
       try {
         // register user
         await _auth.createUserWithEmailAndPassword(
@@ -66,17 +70,20 @@ class _SignupScreenState extends State<SignupScreen> {
           'username': username.text,
           'password': password.text,
           'role': role
-        }).then((value) async {
-          showSnackBar('Account created', context);
         });
+
+        response = 'Account Created Successfully';
       } catch (err) {
-        showSnackBar('Email is Already used in another account', context);
+        response = 'Email is already used in another account';
       }
     } else {
-      showSnackBar('Username Already Exists', context);
+      response = 'Username already exist';
     }
+    setState(() {
+      loading = false;
+    });
 
-//  FirebaseAuth.instance.currentUser?.email
+    return response;
   }
 
   @override
@@ -103,7 +110,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   elevation: 0,
                   color: Colors.grey.withOpacity(0.85),
                   child: Container(
-                    height: screenHeight(context) * 0.86,
+                    height: screenHeight(context) * 0.88,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 25, vertical: 10),
                     child: Form(
@@ -130,6 +137,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             fontWeight: FontWeight.w500,
                           ),
                           TextFieldWidget(
+                            read: false,
                             height: 55,
                             // textcolor: MyColors.white,
                             hinttext: 'Enter Name',
@@ -160,6 +168,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             fontWeight: FontWeight.w500,
                           ),
                           TextFieldWidget(
+                            read: false,
                             height: 55,
                             // textcolor: MyColors.white,
                             hinttext: 'Enter Mobile Number',
@@ -191,6 +200,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             fontWeight: FontWeight.w500,
                           ),
                           TextFieldWidget(
+                            read: false,
                             height: 55,
                             // textcolor: MyColors.white,
                             hinttext: 'Enter email',
@@ -227,6 +237,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             fontWeight: FontWeight.w500,
                           ),
                           TextFieldWidget(
+                            read: false,
                             height: 55,
                             // textcolor: MyColors.white,
                             hinttext: 'Enter Username',
@@ -257,6 +268,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             fontWeight: FontWeight.w500,
                           ),
                           TextFieldWidget(
+                            read: false,
                             height: 55,
                             // textcolor: MyColors.white,
                             hinttext: 'Enter Password',
@@ -296,23 +308,37 @@ class _SignupScreenState extends State<SignupScreen> {
                               ),
                             ],
                           ),
-                          ButtonWidget(
-                            borderradius: BorderRadius.circular(10),
-                            onTab: () {
-                              final isValid = formKey.currentState!.validate();
-                              if (!isValid) {
-                                return;
-                              }
-                              formKey.currentState!.save();
-                              signup();
-                            },
-                            text: 'Register',
-                            bgcolor: Colors.black,
-                            textcolor: Colors.white,
-                            height: 35,
-                            width: 130,
-                            size: 20,
-                          ),
+                          loading
+                              ? const CircularProgressIndicator(
+                                  color: Colors.black,
+                                )
+                              : ButtonWidget(
+                                  borderradius: BorderRadius.circular(10),
+                                  onTab: () async {
+                                    final isValid =
+                                        formKey.currentState!.validate();
+                                    if (!isValid) {
+                                      return;
+                                    }
+                                    formKey.currentState!.save();
+                                    String res = await signup();
+
+                                    if (context.mounted &&
+                                        res == 'Account Created Successfully') {
+                                      showSnackBar(res, context);
+                                      MyNavigation.pushstatic(
+                                          context, const SigninScreen());
+                                    } else {
+                                      showSnackBar(res, context);
+                                    }
+                                  },
+                                  text: 'Register',
+                                  bgcolor: Colors.black,
+                                  textcolor: Colors.white,
+                                  height: 35,
+                                  width: 130,
+                                  size: 20,
+                                ),
                           const SizedBox(
                             height: 15,
                           ),
@@ -323,8 +349,8 @@ class _SignupScreenState extends State<SignupScreen> {
                           ),
                           TextButton(
                               onPressed: () {
-                                MyNavigation()
-                                    .pushRemove(context, const SigninScreen());
+                                MyNavigation.pushRemove(
+                                    context, const SigninScreen());
                               },
                               child: const TextWidget(
                                 textcolor: Colors.black,

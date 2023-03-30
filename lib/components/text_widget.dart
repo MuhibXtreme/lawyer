@@ -8,6 +8,7 @@ class TextWidget extends StatelessWidget {
   final double? letterspacing;
   final AlignmentGeometry? alignment;
   final int? maxlines;
+  final TextOverflow? textoverflow;
   const TextWidget(
       {Key? key,
       this.size,
@@ -15,8 +16,9 @@ class TextWidget extends StatelessWidget {
       this.fontWeight,
       this.textcolor,
       this.letterspacing,
-      this.alignment,this.maxlines
-      })
+      this.alignment,
+      this.maxlines,
+      this.textoverflow})
       : super(key: key);
 
   @override
@@ -24,7 +26,9 @@ class TextWidget extends StatelessWidget {
     return Container(
       alignment: alignment,
       child: Text(
-        '$text',maxLines: maxlines,
+        '$text',
+        maxLines: maxlines,
+        overflow: textoverflow,
         style: TextStyle(
           color: textcolor,
           fontSize: size,

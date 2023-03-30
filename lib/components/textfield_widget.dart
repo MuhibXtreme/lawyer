@@ -22,6 +22,7 @@ class TextFieldWidget extends StatelessWidget {
   final InputBorder? inputBorder;
   final Color? textcolor;
   final int maxLines;
+  final bool? read;
 
   const TextFieldWidget(
       {Key? key,
@@ -45,6 +46,7 @@ class TextFieldWidget extends StatelessWidget {
       this.sufixFunction,
       this.inputBorder,
       this.textcolor,
+      this.read,
       this.maxLines = 1})
       : super(key: key);
 
@@ -57,6 +59,7 @@ class TextFieldWidget extends StatelessWidget {
         borderRadius: borderradius,
       ),
       child: TextFormField(
+        readOnly: read!,
         autocorrect: false,
         maxLines: maxLines,
         enableSuggestions: false,
