@@ -43,7 +43,7 @@ class _ClientHomeState extends State<ClientHome> {
           IconButton(
               onPressed: () {
                 _auth.signOut();
-                MyNavigation.pushstatic(context, const SigninScreen());
+                MyNavigation.pushRemove(context, const SigninScreen());
               },
               icon: const Icon(Icons.logout)),
         ],

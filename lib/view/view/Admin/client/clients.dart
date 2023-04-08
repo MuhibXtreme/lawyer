@@ -1,13 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:lawyer/components/button_widget.dart';
 import 'package:lawyer/components/navigation.dart';
 import 'package:lawyer/components/text_widget.dart';
 import 'package:lawyer/constants.dart';
 import 'package:lawyer/view/view/Admin/client/ad_clients.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../../../components/textfield_widget.dart';
 
 class Clients extends StatefulWidget {
   const Clients({super.key});
@@ -20,6 +17,12 @@ class _ClientsState extends State<Clients> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   TextEditingController search = TextEditingController();
   String? username;
+  bool namefind = false;
+
+  List<DocumentSnapshot> documents = [];
+  CollectionReference? alldataCollection;
+
+  String searchText = '';
 
   @override
   void initState() {
@@ -30,7 +33,12 @@ class _ClientsState extends State<Clients> {
   void getname() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     username = prefs.getString('username');
-    print(username);
+
+    alldataCollection = FirebaseFirestore.instance
+        .collection('Users')
+        .doc(username)
+        .collection('Clients');
+
     setState(() {});
   }
 
@@ -47,58 +55,74 @@ class _ClientsState extends State<Clients> {
           const SizedBox(
             height: 10,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 20),
-                child: TextFieldWidget(
-                  read: false,
-                  height: 40,
-                  width: 180,
-                  hinttext: 'Search Client',
-                  keyboardtype: TextInputType.text,
-                  controller: search,
-                  border: const Border(bottom: BorderSide(width: 1)),
+          Container(
+            height: 42,
+            margin: const EdgeInsets.all(25),
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+                border: Border.all(color: Colors.black26)),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: TextField(
+              controller: search,
+              autocorrect: false,
+              enableSuggestions: false,
+              decoration: InputDecoration(
+                icon: const Icon(
+                  Icons.search,
+                  color: Colors.black,
                 ),
+                suffixIcon: search.text.isNotEmpty
+                    ? GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            searchText = '';
+                            namefind = false;
+                          });
+                          search.clear();
+                        },
+                        child: const Icon(Icons.close))
+                    : null,
+                hintText: 'Search Clients by name',
+                border: InputBorder.none,
               ),
-              ButtonWidget(
-                onTab: () {},
-                text: 'Search',
-                textcolor: Colors.white,
-                size: 18,
-                bgcolor: MyColors.primarycolor,
-                height: 40,
-                width: 120,
-                borderradius: BorderRadius.circular(10),
-              ),
-            ],
-          ),
-          const SizedBox(
-            height: 20,
+              onChanged: (value) async {
+                setState(() {
+                  searchText = value;
+                  namefind = false;
+                });
+              },
+            ),
           ),
           Expanded(
             child: StreamBuilder(
-                stream: _firestore
-                    .collection('Users')
-                    .doc(username)
-                    .collection('Clients')
-                    .snapshots(),
+                stream: alldataCollection!.snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
                     return const Text('Something went wrong');
                   }
 
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Text("Loading");
+                    return const Text("");
                   }
                   if (snapshot.data?.size == 0) {
-                    return const CircularProgressIndicator();
+                    return const Text('no data');
+                  }
+                  documents = snapshot.data!.docs;
+                  //todo Documents list added to filterTitle
+                  if (searchText != '') {
+                    documents = documents.where((element) {
+                      return element
+                          .get('name')
+                          .toString()
+                          .toLowerCase()
+                          .contains(searchText.toLowerCase());
+                    }).toList();
                   }
 
                   return ListView.builder(
                     padding: const EdgeInsets.only(bottom: 70),
-                    itemCount: snapshot.data!.docs.length,
+                    itemCount: documents.length,
                     itemBuilder: (context, index) {
                       return Card(
                         shape: RoundedRectangleBorder(
@@ -130,8 +154,7 @@ class _ClientsState extends State<Clients> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           TextWidget(
-                                            text: snapshot.data!.docs[index]
-                                                ['name'],
+                                            text: documents[index]['name'],
                                             size: 20,
                                             fontWeight: FontWeight.w500,
                                             textoverflow: TextOverflow.visible,
@@ -140,8 +163,7 @@ class _ClientsState extends State<Clients> {
                                             height: 5,
                                           ),
                                           TextWidget(
-                                            text: snapshot.data!.docs[index]
-                                                ['mobileno'],
+                                            text: documents[index]['mobileno'],
                                             size: 15,
                                             fontWeight: FontWeight.w400,
                                             textoverflow: TextOverflow.visible,
@@ -150,8 +172,7 @@ class _ClientsState extends State<Clients> {
                                             height: 5,
                                           ),
                                           TextWidget(
-                                            text: snapshot.data!.docs[index]
-                                                ['email'],
+                                            text: documents[index]['email'],
                                             size: 15,
                                             fontWeight: FontWeight.w400,
                                             textoverflow: TextOverflow.visible,
@@ -167,8 +188,8 @@ class _ClientsState extends State<Clients> {
                                                   context,
                                                   AdClients(
                                                     action: 'edit',
-                                                    email: snapshot.data!
-                                                        .docs[index]['email'],
+                                                    email: documents[index]
+                                                        ['email'],
                                                   ));
                                             },
                                             icon: const Icon(Icons.edit)),
@@ -179,8 +200,8 @@ class _ClientsState extends State<Clients> {
                                                   .collection('Users')
                                                   .doc(username)
                                                   .collection('Clients')
-                                                  .doc(snapshot.data!
-                                                      .docs[index]['email'])
+                                                  .doc(
+                                                      documents[index]['email'])
                                                   .delete();
                                             },
                                             icon: const Icon(Icons.delete))

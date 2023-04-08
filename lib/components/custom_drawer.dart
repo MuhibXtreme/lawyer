@@ -6,6 +6,9 @@ import 'package:lawyer/constants.dart';
 import 'package:lawyer/utils/utils.dart';
 import 'package:lawyer/view/view/Admin/cases/cases.dart';
 import 'package:lawyer/view/view/Admin/client/clients.dart';
+import 'package:lawyer/view/view/Admin/home_screen.dart';
+import 'package:lawyer/view/view/casetype/casetype.dart';
+import 'package:lawyer/view/view/courtsname/courtname.dart';
 
 class CustomDrawer extends StatefulWidget {
   const CustomDrawer({super.key});
@@ -33,7 +36,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
               height: 20,
             ),
             ListTile(
-              onTap: () {},
+              onTap: () {
+                MyNavigation.pushstatic(context, const AdminHome());
+              },
               leading: Icon(
                 Icons.dashboard,
                 color: MyColors.primarycolor,
@@ -47,7 +52,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
             ),
             ListTile(
               onTap: () {
-                MyNavigation.push(context, const Clients());
+                MyNavigation.pushstatic(context, const Clients());
               },
               leading: Icon(
                 Icons.people,
@@ -62,7 +67,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
             ),
             ListTile(
               onTap: () {
-                MyNavigation.push(context, const Cases());
+                MyNavigation.pushstatic(context, const Cases());
               },
               leading: Icon(
                 Icons.cases_rounded,
@@ -71,6 +76,36 @@ class _CustomDrawerState extends State<CustomDrawer> {
               ),
               title: TextWidget(
                 text: 'Cases',
+                size: 20,
+                textcolor: MyColors.primarycolor,
+              ),
+            ),
+            ListTile(
+              onTap: () {
+                MyNavigation.pushstatic(context, const CaseType());
+              },
+              leading: Icon(
+                Icons.note_add,
+                color: MyColors.primarycolor,
+                size: 25,
+              ),
+              title: TextWidget(
+                text: 'Case type',
+                size: 20,
+                textcolor: MyColors.primarycolor,
+              ),
+            ),
+            ListTile(
+              onTap: () {
+                MyNavigation.pushstatic(context, const CourtName());
+              },
+              leading: Icon(
+                Icons.add,
+                color: MyColors.primarycolor,
+                size: 25,
+              ),
+              title: TextWidget(
+                text: 'Courts Name',
                 size: 20,
                 textcolor: MyColors.primarycolor,
               ),

@@ -19,6 +19,13 @@ class _CasesState extends State<Cases> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   TextEditingController search = TextEditingController();
 
+  bool namefind = false;
+
+  List<DocumentSnapshot> documents = [];
+  CollectionReference? alldataCollection;
+
+  String searchText = '';
+
   String? username;
   @override
   void initState() {
@@ -29,6 +36,10 @@ class _CasesState extends State<Cases> {
   void getname() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     username = prefs.getString('username');
+    alldataCollection = FirebaseFirestore.instance
+        .collection('Users')
+        .doc(username)
+        .collection('Cases');
     setState(() {});
   }
 
@@ -45,43 +56,48 @@ class _CasesState extends State<Cases> {
           const SizedBox(
             height: 10,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 20),
-                child: TextFieldWidget(
-                  read: false,
-                  height: 40,
-                  width: 180,
-                  hinttext: 'Search Client',
-                  keyboardtype: TextInputType.text,
-                  controller: search,
-                  border: const Border(bottom: BorderSide(width: 1)),
+          Container(
+            height: 42,
+            margin: const EdgeInsets.all(25),
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+                border: Border.all(color: Colors.black26)),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: TextField(
+              controller: search,
+              autocorrect: false,
+              enableSuggestions: false,
+              decoration: InputDecoration(
+                icon: const Icon(
+                  Icons.search,
+                  color: Colors.black,
                 ),
+                suffixIcon: search.text.isNotEmpty
+                    ? GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            searchText = '';
+                            namefind = false;
+                          });
+                          search.clear();
+                        },
+                        child: const Icon(Icons.close))
+                    : null,
+                hintText: 'Search case by caseno',
+                border: InputBorder.none,
               ),
-              ButtonWidget(
-                onTab: () {},
-                text: 'Search',
-                textcolor: Colors.white,
-                size: 18,
-                bgcolor: MyColors.primarycolor,
-                height: 40,
-                width: 120,
-                borderradius: BorderRadius.circular(10),
-              ),
-            ],
-          ),
-          const SizedBox(
-            height: 20,
+              onChanged: (value) async {
+                setState(() {
+                  searchText = value;
+                  namefind = false;
+                });
+              },
+            ),
           ),
           Expanded(
             child: StreamBuilder(
-                stream: _firestore
-                    .collection('Users')
-                    .doc(username)
-                    .collection('Cases')
-                    .snapshots(),
+                stream: alldataCollection!.snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
                     return const Text('Something went wrong');
@@ -93,12 +109,22 @@ class _CasesState extends State<Cases> {
                   if (snapshot.data?.size == 0) {
                     return const Text('No data found');
                   }
+                  documents = snapshot.data!.docs;
+                  //todo Documents list added to filterTitle
+                  if (searchText != '') {
+                    documents = documents.where((element) {
+                      return element
+                          .get('caseno')
+                          .toString()
+                          .toLowerCase()
+                          .contains(searchText.toLowerCase());
+                    }).toList();
+                  }
 
                   return ListView.builder(
                     padding: const EdgeInsets.only(bottom: 70),
-                    itemCount: snapshot.data!.docs.length,
+                    itemCount: documents.length,
                     itemBuilder: (context, index) {
-                      DocumentSnapshot ds = snapshot.data!.docs[index];
                       return Card(
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(15)),
@@ -125,7 +151,7 @@ class _CasesState extends State<Cases> {
                                         children: [
                                           TextWidget(
                                             text:
-                                                "Client Name: ${snapshot.data!.docs[index]['clientname']}",
+                                                "Client Name: ${documents[index]['clientname']}",
                                             size: 18,
                                             fontWeight: FontWeight.w500,
                                             textoverflow: TextOverflow.visible,
@@ -135,7 +161,7 @@ class _CasesState extends State<Cases> {
                                           ),
                                           TextWidget(
                                             text:
-                                                "Pet/Def Name: ${snapshot.data!.docs[index]['petname']}",
+                                                "Pet/Def Name: ${documents[index]['petname']}",
                                             size: 16,
                                             fontWeight: FontWeight.w300,
                                             textoverflow: TextOverflow.visible,
@@ -145,7 +171,7 @@ class _CasesState extends State<Cases> {
                                           ),
                                           TextWidget(
                                             text:
-                                                "Judge Name: ${snapshot.data!.docs[index]['judgename']}",
+                                                "Judge Name: ${documents[index]['judgename']}",
                                             size: 16,
                                             fontWeight: FontWeight.w300,
                                             textoverflow: TextOverflow.visible,
@@ -155,7 +181,7 @@ class _CasesState extends State<Cases> {
                                           ),
                                           TextWidget(
                                             text:
-                                                "Court Name: ${snapshot.data!.docs[index]['courtname']}",
+                                                "Court Name: ${documents[index]['courtname']}",
                                             size: 16,
                                             fontWeight: FontWeight.w300,
                                             textoverflow: TextOverflow.visible,
@@ -165,7 +191,17 @@ class _CasesState extends State<Cases> {
                                           ),
                                           TextWidget(
                                             text:
-                                                "Case Date: ${snapshot.data!.docs[index]['date']}",
+                                                "Case No: ${documents[index]['caseno']}",
+                                            size: 16,
+                                            fontWeight: FontWeight.w300,
+                                            textoverflow: TextOverflow.visible,
+                                          ),
+                                          const SizedBox(
+                                            height: 8,
+                                          ),
+                                          TextWidget(
+                                            text:
+                                                "Case Date: ${documents[index]['date']}",
                                             size: 16,
                                             fontWeight: FontWeight.w300,
                                             textoverflow: TextOverflow.visible,
@@ -181,8 +217,8 @@ class _CasesState extends State<Cases> {
                                                   context,
                                                   AddCase(
                                                     action: 'edit',
-                                                    docsid: snapshot.data!
-                                                        .docs[index]['docid'],
+                                                    docsid: documents[index]
+                                                        ['docid'],
                                                   ));
                                             },
                                             icon: const Icon(Icons.edit)),
@@ -193,8 +229,8 @@ class _CasesState extends State<Cases> {
                                                   .collection('Users')
                                                   .doc('junaid')
                                                   .collection('Cases')
-                                                  .doc(snapshot.data!
-                                                      .docs[index]['docid'])
+                                                  .doc(
+                                                      documents[index]['docid'])
                                                   .delete();
                                             },
                                             icon: const Icon(Icons.delete))

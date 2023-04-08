@@ -6,6 +6,11 @@ class MyNavigation {
     Navigator.push(context, route);
   }
 
+  static pushreplacement(BuildContext context, Widget screen) {
+    var route = MaterialPageRoute(builder: (context) => screen);
+    Navigator.pushReplacement(context, route);
+  }
+
   static pushstatic(BuildContext context, Widget screen) {
     Navigator.pop(context);
     var route = MaterialPageRoute(builder: (context) => screen);

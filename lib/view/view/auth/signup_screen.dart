@@ -326,7 +326,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                     if (context.mounted &&
                                         res == 'Account Created Successfully') {
                                       showSnackBar(res, context);
-                                      MyNavigation.pushstatic(
+                                      MyNavigation.pushreplacement(
                                           context, const SigninScreen());
                                     } else {
                                       showSnackBar(res, context);
