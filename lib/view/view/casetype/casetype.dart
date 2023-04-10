@@ -14,6 +14,7 @@ class CaseType extends StatefulWidget {
 class _CaseTypeState extends State<CaseType> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   TextEditingController name = TextEditingController();
+  TextEditingController updatename = TextEditingController();
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
   String? adminname;
   bool edit = false;
@@ -48,6 +49,8 @@ class _CaseTypeState extends State<CaseType> {
       'casename': name.text,
       'docid': edit ? editid : id,
     });
+    name.clear();
+    setState(() {});
   }
 
   @override
@@ -230,7 +233,80 @@ class _CaseTypeState extends State<CaseType> {
                                       mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
                                         IconButton(
-                                            onPressed: () {},
+                                            onPressed: () {
+                                              updatename.text = snapshot.data!
+                                                  .docs[index]['casename'];
+                                              showDialog(
+                                                  context: context,
+                                                  builder: (context) {
+                                                    return AlertDialog(
+                                                      title: const Text(
+                                                          'Case Type Name'),
+                                                      content: TextField(
+                                                        onChanged: (value) {
+                                                          setState(() {});
+                                                        },
+                                                        controller: updatename,
+                                                        decoration:
+                                                            const InputDecoration(
+                                                                hintText:
+                                                                    "update the name"),
+                                                      ),
+                                                      actions: <Widget>[
+                                                        MaterialButton(
+                                                          color: Colors.red,
+                                                          textColor:
+                                                              Colors.white,
+                                                          child: const Text(
+                                                              'Cancel'),
+                                                          onPressed: () {
+                                                            Navigator.pop(
+                                                                context);
+                                                          },
+                                                        ),
+                                                        MaterialButton(
+                                                          color: const Color(
+                                                              0xff328695),
+                                                          textColor:
+                                                              Colors.white,
+                                                          child: const Text(
+                                                              'Update'),
+                                                          onPressed: () {
+                                                            setState(() {
+                                                              if (updatename
+                                                                  .text
+                                                                  .isNotEmpty) {
+                                                                _firestore
+                                                                    .collection(
+                                                                        'Users')
+                                                                    .doc(
+                                                                        adminname)
+                                                                    .collection(
+                                                                        'Casestype')
+                                                                    .doc(snapshot
+                                                                            .data!
+                                                                            .docs[index]
+                                                                        [
+                                                                        'docid'])
+                                                                    .set({
+                                                                  'casename':
+                                                                      updatename
+                                                                          .text,
+                                                                  'docid': snapshot
+                                                                          .data!
+                                                                          .docs[index]
+                                                                      ['docid'],
+                                                                });
+                                                                Navigator.pop(
+                                                                    context);
+                                                              }
+                                                            });
+                                                          },
+                                                        ),
+                                                      ],
+                                                    );
+                                                  });
+                                            },
                                             icon: const Icon(Icons.edit)),
                                         IconButton(
                                             color: Colors.red,

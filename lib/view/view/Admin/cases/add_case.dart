@@ -40,6 +40,8 @@ class _AddCaseState extends State<AddCase> {
 
   DateTime startDate = DateTime.utc(2021);
   List<Map<String, dynamic>> usernames = [];
+  List<Map<String, dynamic>> casetype = [];
+  List<Map<String, dynamic>> courtname = [];
   bool namedrop = false;
 
   @override
@@ -54,6 +56,8 @@ class _AddCaseState extends State<AddCase> {
     setState(() {});
     getdetail();
     getallnames();
+    courtlist();
+    courtnamelist();
   }
 
   void getdetail() async {
@@ -71,7 +75,7 @@ class _AddCaseState extends State<AddCase> {
             behalfdrop = value['onbehave'];
             casedrop = value['casetype'];
             courtnamedrop = value['courtname'];
-            uisec.text = value['uisection'];
+            // uisec.text = value['uisection'];
             judgename.text = value['judgename'];
             hearing.text = value['hearing'];
             selectdate = value['date'];
@@ -98,6 +102,36 @@ class _AddCaseState extends State<AddCase> {
     setState(() {});
   }
 
+  void courtlist() async {
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(adminname)
+        .collection('Casestype')
+        .get()
+        .then((value) {
+      for (var i in value.docs) {
+        casetype.add(i.data());
+      }
+    });
+
+    setState(() {});
+  }
+
+  void courtnamelist() async {
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(adminname)
+        .collection('CourtName')
+        .get()
+        .then((value) {
+      for (var i in value.docs) {
+        courtname.add(i.data());
+      }
+    });
+
+    setState(() {});
+  }
+
   void addcase() {
     String id = _firestore
         .collection('Users')
@@ -118,7 +152,7 @@ class _AddCaseState extends State<AddCase> {
       'onbehave': behalfdrop ?? 'Petitioner',
       'casetype': casedrop ?? 'Civil Case',
       'courtname': courtnamedrop ?? 'Peshawar',
-      'uisection': uisec.text,
+      // 'uisection': uisec.text,
       'judgename': judgename.text,
       'hearing': hearing.text,
       'date': selectdate ?? '',
@@ -139,7 +173,7 @@ class _AddCaseState extends State<AddCase> {
       'onbehave': behalfdrop ?? 'Petitioner',
       'casetype': casedrop ?? 'Civil Case',
       'courtname': courtnamedrop ?? 'Peshawar',
-      'uisection': uisec.text,
+      // 'uisection': uisec.text,
       'judgename': judgename.text,
       'hearing': hearing.text,
       'date': selectdate ?? '',
@@ -246,7 +280,7 @@ class _AddCaseState extends State<AddCase> {
                 ),
                 const TextWidget(
                   alignment: Alignment.topLeft,
-                  text: 'Pet/Def Name',
+                  text: 'Defender Name',
                   size: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -342,11 +376,12 @@ class _AddCaseState extends State<AddCase> {
                       border: Border.all(color: Colors.black, width: 2)),
                   child: DropdownButton(
                       underline: const SizedBox(),
-                      hint: Text(casedrop ?? "Civil Case"),
+                      hint: Text(casedrop ?? "Case Name"),
                       isExpanded: true,
-                      items: ['Civil Case', 'Creminal Case'].map((e) {
+                      items: casetype.map((map) {
                         return DropdownMenuItem<String>(
-                            value: e, child: Text(e));
+                            value: map['casename'],
+                            child: Text(map['casename']));
                       }).toList(),
                       onChanged: (val) {
                         casedrop = val;
@@ -368,48 +403,47 @@ class _AddCaseState extends State<AddCase> {
                       border: Border.all(color: Colors.black, width: 2)),
                   child: DropdownButton(
                       underline: const SizedBox(),
-                      hint: Text(courtnamedrop ?? "Peshawar"),
+                      hint: Text(courtnamedrop ?? "Court Name"),
                       isExpanded: true,
-                      items: ['Peshawar', 'Islamabad', 'lahore', 'karachi']
-                          .map((e) {
+                      items: courtname.map((e) {
                         return DropdownMenuItem<String>(
-                            value: e, child: Text(e));
+                            value: e['courtname'], child: Text(e['courtname']));
                       }).toList(),
                       onChanged: (val) {
                         courtnamedrop = val;
                         setState(() {});
                       }),
                 ),
-                const SizedBox(
-                  height: 15,
-                ),
-                const TextWidget(
-                  alignment: Alignment.topLeft,
-                  text: 'U/section',
-                  size: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-                TextFieldWidget(
-                  read: false,
-                  // textcolor: MyColors.white,
-                  hinttext: 'Enter section',
+                // const SizedBox(
+                //   height: 15,
+                // ),
+                // const TextWidget(
+                //   alignment: Alignment.topLeft,
+                //   text: 'U/section',
+                //   size: 16,
+                //   fontWeight: FontWeight.w500,
+                // ),
+                // TextFieldWidget(
+                //   read: false,
+                //   // textcolor: MyColors.white,
+                //   hinttext: 'Enter section',
 
-                  keyboardtype: TextInputType.text,
-                  controller: uisec,
-                  border: const Border(bottom: BorderSide(width: 1)),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return "Field cannot be empty";
-                    }
-                    return null;
-                  },
-                  onChanged: (value) {
-                    final isValid = formKey.currentState!.validate();
-                    if (!isValid) {
-                      return;
-                    }
-                  },
-                ),
+                //   keyboardtype: TextInputType.text,
+                //   controller: uisec,
+                //   border: const Border(bottom: BorderSide(width: 1)),
+                //   validator: (value) {
+                //     if (value!.isEmpty) {
+                //       return "Field cannot be empty";
+                //     }
+                //     return null;
+                //   },
+                //   onChanged: (value) {
+                //     final isValid = formKey.currentState!.validate();
+                //     if (!isValid) {
+                //       return;
+                //     }
+                //   },
+                // ),
                 const SizedBox(
                   height: 15,
                 ),
