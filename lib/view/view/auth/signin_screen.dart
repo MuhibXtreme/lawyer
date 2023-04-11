@@ -205,6 +205,7 @@ class _SigninScreenState extends State<SigninScreen> {
                                       showSnackBar(res, context);
                                     } else {
                                       if (context.mounted && res == 'Admin') {
+                                        //use local database sharedprefrences for saving username
                                         storename();
                                         MyNavigation.push(
                                             context, const AdminHome());

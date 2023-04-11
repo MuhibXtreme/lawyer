@@ -63,6 +63,7 @@ class _SignupScreenState extends State<SignupScreen> {
         // register user
         await _auth.createUserWithEmailAndPassword(
             email: email.text, password: password.text);
+            
         _firestore.collection('Users').doc(username.text).set({
           'name': name.text,
           'phone': mobilenumber.text,
@@ -76,7 +77,9 @@ class _SignupScreenState extends State<SignupScreen> {
       } catch (err) {
         response = 'Email is already used in another account';
       }
-    } else {
+    } 
+    
+    else {
       response = 'Username already exist';
     }
     setState(() {
